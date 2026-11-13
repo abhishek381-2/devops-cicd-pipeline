@@ -11,4 +11,4 @@ black==24.10.0
 requests==2.32.3
 
 # ShellCheck as a Python package - the CI lint stage runs the same tool.
-shellcheck-py==0.10.0.1
+shellcheck-py==0.11.0.1
