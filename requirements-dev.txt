@@ -8,7 +8,7 @@ pytest==8.3.4
 pytest-cov==6.0.0
 ruff==0.9.2
 black==24.10.0
-requests==2.32.3
+requests==2.34.2
 
 # ShellCheck as a Python package - the CI lint stage runs the same tool.
 shellcheck-py==0.10.0.1
