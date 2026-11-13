@@ -120,7 +120,7 @@ git push main
          2. Lint        (Ruff + Black + ShellCheck)      ── fail fast on code quality
          3. Test        (Pytest × SQLite + PostgreSQL)    ── 78 tests, coverage report
          4. Build       (Docker Buildx, multi-stage)      ── tagged with the commit SHA
-         5. Scan        (Trivy: CRITICAL/HIGH = fail)     ── SARIF uploaded to Security tab
+         5. Scan        (Trivy: CRITICAL = fail, HIGH reported)  ── SARIF uploaded to Security tab
          6. Push        (GHCR, using GITHUB_TOKEN)        ── ghcr.io/OWNER/devops-cicd-app:sha-abc123
          7. Deploy      (SSH → EC2 → docker compose up -d)── immutable SHA tag only
          8. Validate    (/health must return HTTP 200)    ── retried with backoff

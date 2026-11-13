@@ -210,7 +210,7 @@ git push origin drill/vulnerable-dep
 | Stage | Result |
 |---|---|
 | 1-4 | ✅ green (the old Flask still installs fine) |
-| 5 **Trivy** | ❌ **red** — `exit-code: 1` on CRITICAL/HIGH |
+| 5 **Trivy** | ❌ **red** — `exit-code: 1` when a CRITICAL vulnerability is found |
 | 6 Push | ⛔ skipped |
 | 7 Deploy | ⛔ skipped |
 

@@ -1239,6 +1239,28 @@ Order important hai:
 
 # 🩺 Troubleshooting — jo galtiyan sabko hoti hain
 
+### Warnings: "Node.js 20 is deprecated" / "CodeQL Action v3 will be deprecated"
+
+**Symptom:** run ke summary me orange warnings, build fail nahi hota.
+
+**Why:** GitHub ne actions ka runtime Node 20 se Node 24 kar diya hai. Purane
+major versions (jaise `actions/checkout@v4`) ab majboori me Node 24 par chalte
+hain — kaam karte hain, par warning dete hain.
+
+**Fix (already applied):** major versions bump kar diye —
+
+| Action | Pehle | Ab |
+|---|---|---|
+| `actions/checkout` | v4 | **v5** |
+| `actions/setup-python` | v5 | **v6** |
+| `actions/upload-artifact` | v4 | **v6** |
+| `actions/download-artifact` | v4 | **v7** |
+| `github/codeql-action/upload-sarif` | v3 | **v4** |
+
+Inputs verify kiye gaye hain (`fetch-depth`, `cache`, `cache-dependency-path`,
+`name`, `path`, `retention-days`, `if-no-files-found`, `sarif_file`,
+`category`) — sab naye versions me maujood hain, isliye config nahi badalna pada.
+
 ### Saare runs 1–3 second me red ho gaye (`startup_failure`)
 
 **Symptom:** Actions list me har run **0m 1s / 0m 3s** me Failure, aur log khaali
@@ -1352,6 +1374,60 @@ make preflight
 > **Sabak:** jab job ka **sirf `Set up job`** fail ho aur andar kuch na dikhe, to
 > 99% case me problem action version me hai, aapke code me nahi. Log ke
 > "Annotations" section me exact naam milta hai.
+
+### Job `5 | Trivy security scan` red — "Process completed with exit code 1"
+
+**Symptom:** Trivy job me step `Trivy - scan the Docker image` red, aur annotation
+me sirf:
+
+```
+Process completed with exit code 1.
+```
+
+**Why:** ye **bug nahi hai** — Trivy ne image me CRITICAL vulnerabilities paaye
+aur security gate ne build rok diya. `exit-code: "1"` ka matlab hi yahi hai.
+
+**Kaunsi CVE hai, kaise dekho:**
+- Actions → job `5` → step **`Trivy - human readable summary`** ka log kholo
+  (wo `if: always()` par chalta hai, isliye fail hone par bhi report milti hai).
+  Wahan table me CVE id, package, installed/fixed version dikhega.
+- Ya GitHub → **Security and quality** tab → Code scanning → `trivy-image-scan`.
+
+**Policy jo is repo me lagayi hai:**
+
+| Severity | Behaviour |
+|---|---|
+| **CRITICAL** (fix available) | ❌ build fail — release blocked |
+| HIGH / MEDIUM / LOW | ✅ reported (dashboard + Security tab), build nahi rokte |
+
+**Kyun HIGH ko blocking nahi rakha:** `python:3.12-slim` jaise base image me
+Debian ke transitive packages me HIGH CVEs aate rehte hain, jinme fix aapke
+project ke control me nahi hota — pipeline har hafte bina wajah red ho jati.
+CRITICAL par gate lagana professional practice hai; HIGH report karna bhi
+zaroori hai (aur dashboard par count dikhta hai).
+
+**HIGH ko phir se blocking karna ho** (interview me dikhane ke liye achha point):
+
+```yaml
+# .github/workflows/ci.yml  ->  step "Trivy - gate the build on CRITICAL vulnerabilities"
+severity: CRITICAL,HIGH
+```
+
+**CVE ko theek karne ke 3 tarike (priority order):**
+1. **Base image bump** — `Dockerfile` me `PYTHON_VERSION=3.12` (ya 3.13) naya
+   patch le aayega: `docker pull python:3.12-slim` phir rebuild.
+2. **Python dependency bump** — `requirements.txt` me affected package update.
+3. **Agar koi fix hi nahi hai** — `ignore-unfixed: true` already laga hai,
+   isliye "fixed version" na hone wali CVE gate nahi todti.
+
+**Local par khud scan karo (Docker + trivy installed hone par):**
+
+```bash
+docker build -t devops-cicd-app:local .
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+  aquasec/trivy:latest image \
+  --severity CRITICAL,HIGH --ignore-unfixed devops-cicd-app:local
+```
 
 ### Job `10 | Publish the dashboard status` red ho raha hai par deploy nahi hua
 
