@@ -1,0 +1,38 @@
+# syntax=docker/dockerfile:1.7
+# =============================================================================
+# BASELINE (deliberately UNOPTIMIZED) image - used ONLY to measure the size
+# reduction achieved by the multi-stage Dockerfile.
+#
+#   docker build -f Dockerfile.unoptimized -t devops-cicd-app:unoptimized .
+#   docker build -f Dockerfile            -t devops-cicd-app:optimized  .
+#
+# Everything that a beginner would do by default is done here:
+#   * full `python:3.12` image (includes build-essential, gcc, git, ...)
+#   * single stage - build tools stay in the final image
+#   * dependencies installed into the system site-packages
+#   * pip cache left behind
+#   * running as root
+# =============================================================================
+
+FROM python:3.12
+
+LABEL org.opencontainers.image.title="devops-cicd-app-unoptimized" \
+      org.opencontainers.image.description="Baseline image for size comparison only"
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=0 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+WORKDIR /app
+
+# pip cache is intentionally kept (no --no-cache-dir) to reflect the naive build
+RUN pip install --upgrade pip setuptools wheel \
+    && pip install -r requirements.txt
+
+COPY . /app
+
+EXPOSE 8000
+
+# Naive start command: the Flask development server.
+CMD ["python", "wsgi.py"]

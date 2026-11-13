@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="DevOps monitoring dashboard for devops-cicd-app">
+  <title>{{ app_name }} · DevOps Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%236366f1'/><path d='M8 20l5-7 4 4 7-9' stroke='white' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+</head>
+<body>
+
+<!-- ══════════════════════════════════════ SIDEBAR ══════════════════════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar__brand">
+    <span class="sidebar__logo" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/>
+      </svg>
+    </span>
+    <span class="sidebar__title">
+      <strong>{{ app_name }}</strong>
+      <small>DevOps Control Plane</small>
+    </span>
+    <button class="sidebar__close" id="sidebarClose" aria-label="Close navigation">&times;</button>
+  </div>
+
+  <nav class="sidebar__nav" aria-label="Dashboard sections">
+    <p class="sidebar__group">Monitoring</p>
+    <a class="navlink" href="#overview" data-target="overview">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+      <span>Overview</span>
+    </a>
+    <a class="navlink" href="#health" data-target="health">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      <span>Application Health</span>
+    </a>
+    <a class="navlink" href="#server" data-target="server">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="8" rx="2"/><rect x="2" y="13" width="20" height="8" rx="2"/><path d="M6 7h.01M6 17h.01"/></svg>
+      <span>Server Monitoring</span>
+    </a>
+
+    <p class="sidebar__group">Delivery</p>
+    <a class="navlink" href="#pipeline" data-target="pipeline">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.12 15.88M14.47 14.48 20 20M8.12 8.12 12 12"/></svg>
+      <span>CI/CD Pipeline</span>
+    </a>
+    <a class="navlink" href="#deployments" data-target="deployments">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="m3 7 9 5 9-5M12 22V12"/></svg>
+      <span>Deployments</span>
+    </a>
+    <a class="navlink" href="#docker" data-target="docker">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 17.5h7M17.5 14v7"/></svg>
+      <span>Docker Monitoring</span>
+    </a>
+
+    <p class="sidebar__group">Security</p>
+    <a class="navlink" href="#security" data-target="security">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+      <span>Security Scans</span>
+    </a>
+    <a class="navlink" href="#logs" data-target="logs">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h5"/></svg>
+      <span>Logs</span>
+    </a>
+  </nav>
+
+  <div class="sidebar__footer">
+    <div class="sidebar__meta">
+      <span class="dot" id="sidebarDot"></span>
+      <span id="sidebarStatus">Connecting…</span>
+    </div>
+    <small>v{{ app_version }} · {{ app_env }}</small>
+  </div>
+</aside>
+
+<div class="scrim" id="scrim" hidden></div>
+
+<!-- ══════════════════════════════════════ MAIN ═════════════════════════════ -->
+<div class="shell">
+
+  <header class="topbar">
+    <button class="iconbtn topbar__burger" id="sidebarToggle" aria-label="Open navigation">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+
+    <div class="topbar__title">
+      <h1>DevOps Monitoring</h1>
+      <p id="topbarSub">Live telemetry for {{ app_name }}</p>
+    </div>
+
+    <div class="topbar__actions">
+      <span class="badge badge--env" id="envBadge">{{ app_env }}</span>
+      <span class="badge badge--version" id="versionBadge">v{{ app_version }}</span>
+      <span class="updated" id="updatedAt">—</span>
+      <button class="btn btn--ghost" id="refreshBtn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+        <span>Refresh</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="content">
+
+    <!-- ─────────────────────────── OVERVIEW ─────────────────────────────── -->
+    <section id="overview" class="section">
+      <div class="section__head">
+        <h2>Overview</h2>
+        <p>Live status of the application and its dependencies.</p>
+      </div>
+
+      <div class="cards">
+        <article class="card card--status" id="cardHealth">
+          <div class="card__icon" data-tone="ok">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <div class="card__body">
+            <p class="card__label">Application Health</p>
+            <p class="card__value" id="ovHealth">—</p>
+            <p class="card__hint" id="ovHealthHint">checking…</p>
+          </div>
+        </article>
+
+        <article class="card card--status" id="cardDb">
+          <div class="card__icon" data-tone="ok">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>
+          </div>
+          <div class="card__body">
+            <p class="card__label">Database</p>
+            <p class="card__value" id="ovDb">—</p>
+            <p class="card__hint" id="ovDbHint">PostgreSQL</p>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card__icon" data-tone="info">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="m3 7 9 5 9-5M12 22V12"/></svg>
+          </div>
+          <div class="card__body">
+            <p class="card__label">Version / Environment</p>
+            <p class="card__value" id="ovVersion">—</p>
+            <p class="card__hint" id="ovVersionHint">—</p>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card__icon" data-tone="info">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          </div>
+          <div class="card__body">
+            <p class="card__label">Database Latency</p>
+            <p class="card__value" id="ovLatency">—</p>
+            <p class="card__hint" id="ovLatencyHint">round trip</p>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card__icon" data-tone="info">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+          </div>
+          <div class="card__body">
+            <p class="card__label">Containers</p>
+            <p class="card__value" id="ovContainers">—</p>
+            <p class="card__hint" id="ovContainersHint">—</p>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card__icon" data-tone="info">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="m3 7 9 5 9-5M12 22V12"/></svg>
+          </div>
+          <div class="card__body">
+            <p class="card__label">Latest Deployment</p>
+            <p class="card__value" id="ovDeploy">—</p>
+            <p class="card__hint" id="ovDeployHint">—</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────── HEALTH ───────────────────────────────── -->
+    <section id="health" class="section">
+      <div class="section__head">
+        <h2>Application Health</h2>
+        <p>The same <code>/health</code> contract the CI pipeline and Docker use for the readiness probe.</p>
+      </div>
+
+      <div class="panel">
+        <div class="panel__head">
+          <h3>Readiness probe</h3>
+          <a class="link" href="/health" target="_blank" rel="noopener">/health JSON</a>
+        </div>
+        <div class="kv">
+          <div class="kv__item"><span>Status</span><strong id="hzStatus">—</strong></div>
+          <div class="kv__item"><span>Database</span><strong id="hzDb">—</strong></div>
+          <div class="kv__item"><span>Latency</span><strong id="hzLatency">—</strong></div>
+          <div class="kv__item"><span>Checked at</span><strong id="hzChecked">—</strong></div>
+          <div class="kv__item"><span>Uptime</span><strong id="hzUptime">—</strong></div>
+          <div class="kv__item"><span>Users</span><strong id="hzUsers">—</strong></div>
+        </div>
+        <pre class="code" id="hzRaw">—</pre>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────── PIPELINE ─────────────────────────────── -->
+    <section id="pipeline" class="section">
+      <div class="section__head">
+        <h2>CI/CD Pipeline</h2>
+        <p>Status of the last GitHub Actions run, written by the pipeline itself.</p>
+      </div>
+
+      <div class="panel" id="pipelinePanel">
+        <div class="panel__head">
+          <h3>GitHub Actions</h3>
+          <a class="link" id="pipelineLink" href="#" target="_blank" rel="noopener" hidden>Open run</a>
+        </div>
+        <div class="kv" id="pipelineKv">
+          <div class="kv__item"><span>Workflow</span><strong id="ciWorkflow">—</strong></div>
+          <div class="kv__item"><span>Conclusion</span><strong id="ciConclusion">—</strong></div>
+          <div class="kv__item"><span>Branch</span><strong id="ciBranch">—</strong></div>
+          <div class="kv__item"><span>Commit</span><strong id="ciCommit">—</strong></div>
+          <div class="kv__item"><span>Duration</span><strong id="ciDuration">—</strong></div>
+          <div class="kv__item"><span>Completed</span><strong id="ciCompleted">—</strong></div>
+        </div>
+        <div class="stages" id="ciStages"></div>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────── DEPLOYMENTS ──────────────────────────── -->
+    <section id="deployments" class="section">
+      <div class="section__head">
+        <h2>Deployments</h2>
+        <p>Immutable commit-SHA image tags, newest first.</p>
+      </div>
+
+      <div class="grid grid--2">
+        <div class="panel">
+          <div class="panel__head"><h3>Current release</h3></div>
+          <div class="kv">
+            <div class="kv__item"><span>Deployed image</span><strong id="depCurrent">—</strong></div>
+            <div class="kv__item"><span>Tag</span><strong id="depTag">—</strong></div>
+            <div class="kv__item"><span>Rollback target</span><strong id="depPrevious">—</strong></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel__head"><h3>Deployments over time</h3></div>
+          <div class="chart" id="deployChart"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel__head"><h3>Deployment history</h3></div>
+        <div class="table-wrap">
+          <table class="table" id="deployTable">
+            <thead><tr><th>Timestamp</th><th>Image tag</th><th>Status</th><th>Duration</th><th>Commit</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────── DOCKER ───────────────────────────────── -->
+    <section id="docker" class="section">
+      <div class="section__head">
+        <h2>Docker Monitoring</h2>
+        <p>Container status collected on the host by <code>collect-metrics.sh</code>.</p>
+      </div>
+      <div class="panel">
+        <div class="panel__head"><h3>Containers</h3></div>
+        <div class="table-wrap">
+          <table class="table" id="dockerTable">
+            <thead><tr><th>Container</th><th>Image</th><th>State</th><th>Health</th><th>Status</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────── SECURITY ─────────────────────────────── -->
+    <section id="security" class="section">
+      <div class="section__head">
+        <h2>Security Scans</h2>
+        <p>Trivy vulnerability scan of the deployed image, performed by the pipeline.</p>
+      </div>
+
+      <div class="cards cards--4">
+        <article class="card card--mini" id="sevCritical">
+          <p class="card__label">Critical</p><p class="card__value">—</p>
+        </article>
+        <article class="card card--mini" id="sevHigh">
+          <p class="card__label">High</p><p class="card__value">—</p>
+        </article>
+        <article class="card card--mini" id="sevMedium">
+          <p class="card__label">Medium</p><p class="card__value">—</p>
+        </article>
+        <article class="card card--mini" id="sevLow">
+          <p class="card__label">Low</p><p class="card__value">—</p>
+        </article>
+      </div>
+
+      <div class="panel">
+        <div class="panel__head"><h3>Scan details</h3></div>
+        <div class="kv">
+          <div class="kv__item"><span>Scanned image</span><strong id="secImage">—</strong></div>
+          <div class="kv__item"><span>Scanned at</span><strong id="secAt">—</strong></div>
+          <div class="kv__item"><span>Policy</span><strong id="secPolicy">—</strong></div>
+          <div class="kv__item"><span>Result</span><strong id="secResult">—</strong></div>
+        </div>
+        <div class="table-wrap">
+          <table class="table" id="vulnTable">
+            <thead><tr><th>Severity</th><th>CVE</th><th>Package</th><th>Installed</th><th>Fixed in</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────── SERVER ───────────────────────────────── -->
+    <section id="server" class="section">
+      <div class="section__head">
+        <h2>Server Monitoring</h2>
+        <p>CPU, memory and disk of the host running the stack.</p>
+      </div>
+
+      <div class="grid grid--3">
+        <div class="panel gauge-panel">
+          <div class="panel__head"><h3>CPU</h3></div>
+          <div class="gauge" id="gaugeCpu"></div>
+          <p class="gauge__meta" id="cpuMeta">—</p>
+        </div>
+        <div class="panel gauge-panel">
+          <div class="panel__head"><h3>Memory</h3></div>
+          <div class="gauge" id="gaugeMem"></div>
+          <p class="gauge__meta" id="memMeta">—</p>
+        </div>
+        <div class="panel gauge-panel">
+          <div class="panel__head"><h3>Disk</h3></div>
+          <div class="gauge" id="gaugeDisk"></div>
+          <p class="gauge__meta" id="diskMeta">—</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel__head"><h3>Host</h3></div>
+        <div class="kv">
+          <div class="kv__item"><span>Hostname</span><strong id="hostName">—</strong></div>
+          <div class="kv__item"><span>Operating system</span><strong id="hostOs">—</strong></div>
+          <div class="kv__item"><span>Host uptime</span><strong id="hostUptime">—</strong></div>
+          <div class="kv__item"><span>Load average</span><strong id="hostLoad">—</strong></div>
+          <div class="kv__item"><span>Metrics collected</span><strong id="hostCollected">—</strong></div>
+          <div class="kv__item"><span>Collector</span><strong id="hostFresh">—</strong></div>
+        </div>
+        <div class="chart chart--wide" id="diskChart"></div>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────── LOGS ─────────────────────────────────── -->
+    <section id="logs" class="section">
+      <div class="section__head">
+        <h2>Logs</h2>
+        <p>Deployment and rollback logs from the host.</p>
+      </div>
+      <div class="panel">
+        <div class="panel__head">
+          <h3>Recent log lines</h3>
+          <a class="link" href="/api/logs" target="_blank" rel="noopener">/api/logs JSON</a>
+        </div>
+        <pre class="code code--log" id="logView">—</pre>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <span id="footText">{{ app_name }} · v{{ app_version }} · {{ app_env }}</span>
+      <span>Auto-refresh every 30s · <a class="link" href="/health" target="_blank" rel="noopener">/health</a></span>
+    </footer>
+  </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+# Default owners for everything in the repository.
+*                       @YOUR_USERNAME
+
+# The delivery pipeline deserves a second pair of eyes.
+/.github/workflows/    @YOUR_USERNAME
+/scripts/              @YOUR_USERNAME
+/Dockerfile*           @YOUR_USERNAME
+/docker-compose*.yml   @YOUR_USERNAME
+/nginx/                @YOUR_USERNAME

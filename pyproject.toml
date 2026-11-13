@@ -1,0 +1,37 @@
+[project]
+name = "devops-cicd-app"
+version = "1.0.0"
+description = "Containerised Flask web application with a full CI/CD pipeline"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+exclude = [".venv", "build", "dist", "node_modules", "__pycache__", ".ruff_cache"]
+
+[tool.ruff.lint]
+# E/F = pycodestyle + pyflakes, I = isort, B = bugbear, S = bandit security, UP = pyupgrade
+select = ["E", "F", "I", "B", "UP", "W"]
+ignore = [
+    "E501",    # line length is handled by the formatter
+    "B008",    # Flask's app.route() decorator is a documented false positive
+    "UP031",   # printf-style formatting is fine for log messages
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]   # pytest uses assert statements
+# tools/measure_images.py is a one-off developer measurement script. It talks to
+# the public Docker Hub / GHCR APIs over HTTPS and shells out to `docker` - none
+# of it ships in the image, so the bandit URL/subprocess rules do not apply.
+"tools/*" = ["S108", "S310", "S603"]
+# Same for the CI helper that reads the GitHub REST API over HTTPS.
+"scripts/*.py" = ["S310"]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.params.Depends"]
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]

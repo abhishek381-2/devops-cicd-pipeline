@@ -1,0 +1,66 @@
+# =============================================================================
+# Build context exclusions - keep the image small and avoid leaking secrets.
+# Anything listed here is NEVER sent to the Docker daemon.
+# =============================================================================
+
+# --- Version control ---------------------------------------------------------
+.git
+.gitignore
+.github
+
+# --- Secrets & environment ---------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+*.pem
+
+# --- Tests & tooling (not needed at runtime) --------------------------------
+tests/
+htmlcov/
+coverage.xml
+reports/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.tox/
+.nox/
+
+# --- Virtual environments ----------------------------------------------------
+.venv/
+venv/
+env/
+virtualenv/
+
+# --- Python artefacts --------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# --- Documentation & editor noise -------------------------------------------
+docs/
+*.md
+!README.md
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# --- Containers / infra ------------------------------------------------------
+Dockerfile*
+docker-compose*.yml
+nginx/
+scripts/
+Makefile
+pytest.ini
+
+# --- Misc --------------------------------------------------------------------
+*.log
+tmp/
