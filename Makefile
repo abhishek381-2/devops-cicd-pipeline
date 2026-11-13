@@ -11,7 +11,7 @@
 
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
-.PHONY: help setup venv install run lint lint-ci format test test-cov coverage \
+.PHONY: help setup venv install run lint lint-ci check-actions preflight format test test-cov coverage \
         docker-build docker-build-unoptimized docker-up docker-down docker-logs \
         docker-shell measure-images migrate seed clean ci
 
@@ -63,6 +63,12 @@ lint: ## Run every static check (ruff, black, shellcheck)
 # The exact four commands the CI "1-3 | Checkout, Lint & Test" job runs, in the
 # same order, using the same pinned versions from requirements-dev.txt.
 # Run this before pushing - it catches what GitHub Actions would fail on.
+check-actions: ## Verify every `uses:` action version really exists on GitHub
+	./scripts/check-action-versions.sh
+
+preflight: check-actions lint-ci ## Everything to run before pushing (action versions + lint)
+	@echo "🚀 Safe to push - CI lint job and all action versions are valid"
+
 lint-ci: ## Reproduce the CI lint job exactly (pinned ruff/black/shellcheck)
 	$(BIN)/ruff check . --output-format=concise
 	$(BIN)/black --check --diff .

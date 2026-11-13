@@ -162,10 +162,20 @@ Ye ek extra safety hai — jo CI fail karega wo aap yahin pakad loge:
 python3 -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements-dev.txt
-make lint-ci
+make preflight
 ```
 
-**Expected (last line):** `✅ CI lint job will pass`
+**Expected (last lines):**
+
+```
+[actions] All 10 action reference(s) resolve.
+✅ CI lint job will pass
+🚀 Safe to push - CI lint job and all action versions are valid
+```
+
+> `make preflight` do cheezein check karta hai: har `uses:` action ka version
+> GitHub par asli me maujood hai (`make check-actions`), aur CI ke exact lint
+> commands pass hote hain (`make lint-ci`).
 
 > `make lint-ci` wahi 4 commands chalata hai jo GitHub Actions chalata hai, aur
 > `requirements-dev.txt` ke **exact pinned versions** ke saath (ruff, black,
@@ -1296,6 +1306,52 @@ pytest -v --color=yes     # ✅ pehle: --color=always ❌
 > **pehle log me `ERROR: usage:` dhoondho**. Wo argument/config error hota hai,
 > test failure nahi. Aur hamesha CI wale **exact command** se local test karo
 > (`make ci`), `pytest -q` se nahi.
+
+### Job ka sirf pehla step `Set up job` red hai (baaki step dikhte hi nahi)
+
+**Symptom:** kisi job me **ek bhi step nahi chala**, sirf `Set up job` red, aur
+log khaali. Ya annotation me:
+
+```
+Unable to resolve action `aquasecurity/trivy-action@0.28.0`,
+unable to find version `0.28.0`
+```
+
+**Why:** GitHub ne job shuru karne se **pehle** hi us action ka version dhoondha
+aur use mila hi nahi. Matlab aapke code, tests ya Docker me koi dikkat nahi —
+bas `uses:` me likha version exist nahi karta.
+
+Do common wajah:
+1. **Tag scheme galat** — kuch actions `v0.36.0` likhte hain, kuch `0.36.0`.
+   `trivy-action` me `v` lagta hai.
+2. **Tag delete/rename ho gaya** — purana version hata diya gaya.
+
+**Fix (already applied):** `aquasecurity/trivy-action@0.28.0` →
+`aquasecurity/trivy-action@v0.36.0`.
+
+**Aage se pehle hi pakad lo** — ye script har `uses:` ko GitHub API se verify
+karta hai aur galat version par available versions bhi dikhata hai:
+
+```bash
+make check-actions
+```
+
+```
+[actions] Checking 10 unique action reference(s) ...
+[actions]   actions/checkout@v4  (tag)
+[actions]   aquasecurity/trivy-action@v0.36.0  (tag)
+[actions] All 10 action reference(s) resolve.
+```
+
+Ek command me sab (action versions + lint), push se pehle:
+
+```bash
+make preflight
+```
+
+> **Sabak:** jab job ka **sirf `Set up job`** fail ho aur andar kuch na dikhe, to
+> 99% case me problem action version me hai, aapke code me nahi. Log ke
+> "Annotations" section me exact naam milta hai.
 
 ### Job `10 | Publish the dashboard status` red ho raha hai par deploy nahi hua
 

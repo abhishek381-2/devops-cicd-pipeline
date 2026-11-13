@@ -1,21 +1,41 @@
-# Keeps the dependencies fresh and the vulnerability count low.
+# =============================================================================
+# Dependabot configuration
+# =============================================================================
+# IMPORTANT - why the pull-request limit is 0
+#
+# With a normal limit, Dependabot opens ~10-12 PRs at once. Every PR runs the
+# full pipeline, so the Actions tab fills up with red runs that look alarming
+# but only mean "an automated dependency bump has not been reviewed yet".
+#
+# For a portfolio project you want a READ-ONLY Actions tab: only YOUR commits.
+# So version-update PRs are switched off (limit 0) while everything else stays:
+#
+#   * Dependabot SECURITY alerts keep working (repo > Security > Dependabot)
+#   * Dependabot SECURITY updates still open a PR when a CVE affects you
+#   * The config is version-controlled - flip the limit back to 3 any time
+#
+# To re-enable routine version updates, change the three `open-pull-requests-limit`
+# values below back to 3 and commit.
+# =============================================================================
 version: 2
 updates:
   - package-ecosystem: pip
     directory: "/"
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 0     # 0 = no routine PRs (see note above)
     labels: [dependencies, python]
 
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
       interval: monthly
+    open-pull-requests-limit: 0
     labels: [dependencies, ci]
 
   - package-ecosystem: docker
     directory: "/"
     schedule:
       interval: monthly
+    open-pull-requests-limit: 0
     labels: [dependencies, docker]

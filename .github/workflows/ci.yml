@@ -65,7 +65,7 @@ jobs:
   # ===========================================================================
   build-and-test:
     name: "1-3 | Checkout, Lint & Test"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
 
     services:
@@ -168,7 +168,7 @@ jobs:
   # ===========================================================================
   build-image:
     name: "4 | Build Docker image"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     needs: build-and-test
 
@@ -251,7 +251,7 @@ jobs:
   # ===========================================================================
   security-scan:
     name: "5 | Trivy security scan"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     needs: build-image
 
@@ -271,7 +271,7 @@ jobs:
           docker images
 
       - name: "Trivy - scan the Docker image"
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ needs.build-image.outputs.image_ref }}
           format: sarif
@@ -294,7 +294,7 @@ jobs:
 
       - name: "Trivy - human readable summary"
         if: always()
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ needs.build-image.outputs.image_ref }}
           format: table
@@ -307,7 +307,7 @@ jobs:
         # artefact that actually ships). A brand-new CVE in a transitive
         # dependency should not break an unrelated commit.
         continue-on-error: true
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: .
@@ -327,7 +327,7 @@ jobs:
       # The dashboard shows the real Trivy counters - never invented numbers.
       - name: "Trivy - machine readable report for the dashboard"
         if: always()
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ needs.build-image.outputs.image_ref }}
           format: json
@@ -366,7 +366,7 @@ jobs:
   # ===========================================================================
   push-image:
     name: "6 | Push to GHCR"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     needs: [build-image, security-scan]      # only runs if the scan passed
     # Pull requests must never push to the registry.
@@ -412,7 +412,7 @@ jobs:
   # ===========================================================================
   deploy:
     name: "7-9 | Deploy, Validate & Rollback"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     needs: push-image
     # Pull requests must never touch production.
@@ -637,7 +637,7 @@ jobs:
   # ===========================================================================
   update-dashboard-status:
     name: "10 | Publish the dashboard status"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     needs: [deploy]
     if: >-
