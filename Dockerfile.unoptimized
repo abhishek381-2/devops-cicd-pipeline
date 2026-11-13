@@ -14,7 +14,7 @@
 #   * running as root
 # =============================================================================
 
-FROM python:3.12
+FROM python:3.13
 
 LABEL org.opencontainers.image.title="devops-cicd-app-unoptimized" \
       org.opencontainers.image.description="Baseline image for size comparison only"
